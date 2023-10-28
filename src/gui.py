@@ -4,7 +4,7 @@ from typing import TYPE_CHECKING, Callable
 import dearpygui.dearpygui as dpg
 
 if TYPE_CHECKING:
-    from wrapers import DiscordAccount, Guild, Channel
+    from wrapers import DiscordAccount, Guild, Channel, Message
 
 from wrapers import create_message_profile, create_embed_profile
 from webbrowser import open_new_tab
@@ -15,6 +15,7 @@ class GUI:
     def __init__(self) -> None:
         self.get_messages: Callable[[int], dict] = None
         self.send_message: Callable[[int]] = None
+        self.open_channels: list[str] = []
 
     def update_user(self, ud: DiscordAccount) -> None:
         with dpg.window(label="User info", no_close=True):
@@ -46,8 +47,18 @@ class GUI:
     def show_guild(self, caller: str | int, app_data, _):
         dpg.show_item(caller.removeprefix("show_"))
 
+    def on_close_channel(self, caller, app_data, data: str):
+        self.open_channels.remove(data)
+
     def view_channel(self, caller: str, app_data, data: tuple[Channel, Guild]):
-        with dpg.window(label=f"Channel {data[0].name}"):
+        self.open_channels.append(data[0].id)
+
+        with dpg.window(
+            label=f"Channel {data[0].name}",
+            tag=f"channel_{data[0].id}",
+            on_close=self.on_close_channel,
+            user_data=data[0].id,
+        ):
             for msg in reversed(self.get_messages(data[0].id)):
                 self.render_message(msg)
 
@@ -55,12 +66,15 @@ class GUI:
                 on_enter=True,
                 callback=self.send_msg_callback,
                 user_data=data[0].id,
-                tag="message_text",
+                tag=f"send_message_inp_{data[0].id}",
             )
 
-    def send_msg_callback(self, caller: str, app_data, data):
-        self.send_message(data, app_data)
-        dpg.set_value("message_text", "")
+    def add_channel_message(self, msg: dict):
+        self.render_message(msg, before=f"send_message_inp_{msg['channel_id']}")
+
+    def send_msg_callback(self, caller: str, app_data, user_data: str):
+        self.send_message(user_data, app_data)
+        dpg.set_value(f"send_message_inp_{user_data}", "")
 
     def render_guild(self, guild: Guild):
         with dpg.window(label=f"{guild.name!r}", show=False, tag=guild.id):
@@ -106,10 +120,10 @@ class GUI:
                 user_data=attachment_data["url"],
             )
 
-    def render_message(self, data):
+    def render_message(self, data, before=0):
         msg = create_message_profile(data)
 
-        with dpg.group():
+        with dpg.group(before=before):
             dpg.add_text(msg.author["username"])
 
             # if the content is blank then we end up adding a blank line

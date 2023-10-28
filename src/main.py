@@ -20,6 +20,11 @@ class MyDiscordClient(DiscordListener):
         self.guilds = [create_guild_profile(g) for g in e["guilds"]]
         self.ui.update_guilds(self.guilds)
 
+    def on_MESSAGE_CREATE(self, e):
+        # The user has a channel open and a message is sent in it
+        if str(e["channel_id"]) in self.ui.open_channels:
+            self.ui.add_channel_message(e)
+
     def get_messages(self, channel_id: int):
         res = self.client.get(
             f"https://discord.com/api/v9/channels/{channel_id}/messages?limit=50",
