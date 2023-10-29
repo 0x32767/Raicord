@@ -13,6 +13,7 @@ from json import dumps
 
 class GUI:
     def __init__(self) -> None:
+        self.get_user_prof: Callable[[int], dict] = None
         self.get_messages: Callable[[int], dict] = None
         self.send_message: Callable[[int]] = None
         self.open_channels: list[str] = []
@@ -49,6 +50,13 @@ class GUI:
 
     def on_close_channel(self, caller, app_data, data: str):
         self.open_channels.remove(data)
+
+    def show_user_profile(self, caller, app_data, user_data: int):
+        data = self.get_user_prof(user_data)
+
+        with dpg.window(label=f"Looking at {data['username']!r}"):
+            for k, v in data.items():
+                dpg.add_text(f"{k!r} : {v!r}")
 
     def view_channel(self, caller: str, app_data, data: tuple[Channel, Guild]):
         self.open_channels.append(data[0].id)
@@ -124,7 +132,11 @@ class GUI:
         msg = create_message_profile(data)
 
         with dpg.group(before=before):
-            dpg.add_text(msg.author["username"])
+            dpg.add_button(
+                label=msg.author["username"],
+                callback=self.show_user_profile,
+                user_data=msg.author["id"],
+            )
 
             # if the content is blank then we end up adding a blank line
             if msg.content:

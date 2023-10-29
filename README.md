@@ -12,13 +12,13 @@ Raicord is a custom discord client that uses dearpygui inder the hood. The clien
 - viewing attachments details (shows: file type, file name, link, option to view file in browser)
 - Sending messages
 - All the benefits of imgui!
+- Vewing user profiles
 
 ## Going to add
 
 - Channel folders/categories
 - Message send times
 - Pings
-- Vewing user profiles
 - Searching for users
 - Direct messages
 - Guild folders

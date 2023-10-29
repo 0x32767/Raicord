@@ -10,6 +10,7 @@ class MyDiscordClient(DiscordListener):
         self.ui: GUI = gui
         self.user_data = None
 
+        self.ui.get_user_prof = self.get_user_data
         self.ui.get_messages = self.get_messages
         self.ui.send_message = self.send
 
@@ -24,6 +25,16 @@ class MyDiscordClient(DiscordListener):
         # The user has a channel open and a message is sent in it
         if str(e["channel_id"]) in self.ui.open_channels:
             self.ui.add_channel_message(e)
+
+    def get_user_data(self, user_id: str):
+        res = self.client.get(
+            f"https://discord.com/api/v9/users/{user_id}",
+            headers={
+                "authorization": self.token,
+                "Content-Type": "application/json",
+            },
+        )
+        return res.json()
 
     def get_messages(self, channel_id: int):
         res = self.client.get(
