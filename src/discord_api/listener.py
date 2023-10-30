@@ -12,12 +12,10 @@ class DiscordListener:
         self.client = httpx.Client()
         self.token = token
 
-    @staticmethod
-    def send_json_request(ws, request):
+    def send_json_request(self, ws, request):
         ws.send(json.dumps(request))
 
-    @staticmethod
-    def recieve_json_response(ws):
+    def recieve_json_response(self, ws):
         response = ws.recv()
 
         if response:
@@ -25,14 +23,13 @@ class DiscordListener:
 
         return None
 
-    @staticmethod
-    def heartbeat(interval, ws):
+    def heartbeat(self, interval, ws):
         print("Heartbeat start")
         while True:
             time.sleep(interval)
             heartbeatJSON = {"op": 1, "d": "null"}
 
-            DiscordListener.send_json_request(ws, heartbeatJSON)
+            self.send_json_request(ws, heartbeatJSON)
             print("heartbeat sent")
 
     def send(self, chid: int, msg: str):
